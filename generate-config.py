@@ -15,7 +15,7 @@ def main():
     # Parse arguments
     parser = argparse.ArgumentParser(description='Generate PIA wireguard config')
     parser.add_argument('-r', '--region', dest='region', choices=regions, required=True, help='Select a region', metavar='')
-    parser.add_argument('-f', '--config', help='Name of the generated config file')
+    parser.add_argument('-f', '--config', help='Name of the generated config file (without extension)', required=True)
     parser.add_argument('--username', required=True, help='PIA username')
     parser.add_argument('--password', required=True, help='PIA password')
     parser.add_argument('--config-dir', default='.', help='Directory to save the generated config file (default: current directory)')
@@ -49,12 +49,8 @@ def main():
         sys.exit(1)
 
     # Build config
-    if args.config:
-        config_file = args.config
-    else:
-        timestamp = int(datetime.now().timestamp())
-        location = pia.region.replace(' ', '-')
-        config_file = 'PIA-{}-{}.conf'.format(location, timestamp)
+    config_name = args.config
+    config_file = f"{config_name}.conf"
 
     # Ensure the config directory exists
     config_dir = os.path.abspath(args.config_dir)
@@ -77,8 +73,8 @@ def main():
     wgc.add_attr(peer, 'PersistentKeepalive', '25')
     wgc.write_file()
 
-    # Generate the wg1.cfg file
-    cfg_file_path = os.path.join(config_dir, "wg1.cfg")
+    # Generate the .cfg file with the same name as the config
+    cfg_file_path = os.path.join(config_dir, f"{config_name}.cfg")
     network = pia.connection['peer_ip'].rsplit('.', 1)[0] + ".0/24"  # Adjust the network to match "10.26.147.0/24"
 
     cfg_content = f"""
@@ -93,7 +89,7 @@ def main():
     Address:1=""
     """
 
-    # Save the cfg file
+    # Save the .cfg file
     with open(cfg_file_path, 'w') as cfg_file:
         cfg_file.write(cfg_content.strip())
 

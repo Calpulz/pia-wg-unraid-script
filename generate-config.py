@@ -3,10 +3,18 @@
 from piawg import piawg
 from datetime import datetime
 from wgconfig import WGConfig
-import argparse, os, sys
+import argparse, os, sys, subprocess
 
 # comment to debug
 sys.tracebacklimit = 0
+
+def generate_public_key(private_key):
+    """Generate a WireGuard public key from a private key."""
+    process = subprocess.Popen(['wg', 'pubkey'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = process.communicate(input=private_key.encode())
+    if process.returncode != 0:
+        raise Exception(f"Failed to generate public key: {stderr.decode().strip()}")
+    return stdout.decode().strip()
 
 def main():
     pia = piawg()
@@ -73,12 +81,15 @@ def main():
     wgc.add_attr(peer, 'PersistentKeepalive', '25')
     wgc.write_file()
 
+    # Generate the public key for the .cfg file from the private key
+    public_key_cfg = generate_public_key(pia.privatekey)
+
     # Generate the .cfg file with the same name as the config
     cfg_file_path = os.path.join(config_dir, f"{config_name}.cfg")
     network = pia.connection['peer_ip'].rsplit('.', 1)[0] + ".0/24"  # Adjust the network to match "10.26.147.0/24"
 
     cfg_content = f"""
-PublicKey:0="{pia.connection['server_key']}"
+PublicKey:0="{public_key_cfg}"
 PROT:0=""
 Network:0="{network}"
 Endpoint:0=""
@@ -97,3 +108,4 @@ Address:1=""
 
 if __name__ == '__main__':
     main()
+

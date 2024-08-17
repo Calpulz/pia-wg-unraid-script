@@ -5,156 +5,112 @@ This is a Python utility that generates WireGuard configuration files for the Pr
 
 This was created by reverse engineering the [manual-connections](https://github.com/pia-foss/manual-connections) script released by PIA. At this stage, the tool is a quick and dirty attempt to get things working. It could break at any moment if PIA makes changes to their API.
 
-pia-wg runs on both Windows and Linux.
+## UNRAID USERSCRIPT
 
-## Windows
-* Install the latest version of [Python 3](https://www.python.org/downloads/windows/)
-  * Select "Add Python to environment variables"
-* Install [WireGuard](https://www.wireguard.com/install/)
+This has been modified to work with UNRAID OS though the UserScripts Plugin. Wireguard Config file (wg.conf) and UNRAID config file (wg.cfg) are both generated and placed inside the wireguard directory.
 
-Open a command prompt and navigate to the directory where you placed the pia-wg utility. The following commands will create a virtual Python environment, install the dependencies, and run the tool.
+**This was mainly done for my own use. It may break or not function with different setups.**
 
+## REQUIREMENTS
+
+- **THIS WILL ONLY WORK IN UNRAID OS**
+- UserScripts plugin by	Andrew Zawadzki **MUST** be installed
+- NerdTools plugin by UnRAIDES **MUST** be installed with the following enabled:
+     - python-pip
+     - python-setuptools
+     - python3
+
+## INSTRUCTIONS
+- In the UNRAID WebGUI, go to Settings>UserScripts>ADD NEW SCRIPT
+- Name the Script. Example: "PIA Config Generator"
+- Click the small cog by this new script and click "EDIT SCRIPT"
+- Copy and paste the script below
 ```
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-python generate-config.py
-```
+#!/bin/bash
+git clone https://github.com/Calpulz/pia-wg-unraid-script.git
+cd pia-wg-unraid-script
 
-Follow the prompts. When finished, you can exit the virtual environment with the `deactivate` command.
 
-The script should generate a `.conf` file that can be imported into the WireGuard utility.
-
-## Linux (Debian/Ubuntu)
-Install dependencies, clone pia-wg project, and create a virual Python environment:
-```
-sudo apt install git python3-venv wireguard openresolv
-git clone https://github.com/hsand/pia-wg.git
-cd pia-wg
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+
+python generate-config.py --region "REGION" --username "USERNAME" --password "PASSWORD" --config "CONFIGNAME" --config-dir "/etc/wireguard"
+
+cd ..
+rm -rf "pia-wg-unraid-script"
+```
+- The above script will pull this repo, setup and start the Python Virtual Enviroment, run the Configuration Generation Script and then clean up the Virtual Enviroment.
+- After the script has run, 2 config files will have been generated in the output directory. For Example, wg1.conf and wg1.cfg.
+- **NEXT IS IMPORTANT**
+- In the UNRAID WebGUI go to Settings>VPN Manager
+- You should now see the new tunnel. Before you activate the tunnel you must add names to "Local Name" and "Peer Name" and then click "APPLY".
+- **UNRAID OS will then add extra configuration to the config files that were generated that is needed for the tunnel to function!**
+- Now you can enable the tunnel.
+- Simply change any dockers to use this new network for them to use the PIA VPN.
+- It is suggested that you add your prefered DNS into the Extra Parameters for each docker using this tunnel to avoid DNS leaks. For example: --dns=8.8.8.8
+
+## Configuration
+All configuration is done inside the UNRAID UserScript by editing the following line:
+```
+python generate-config.py --region "REGION" --username "USERNAME" --password "PASSWORD" --config "CONFIGNAME" --config-dir "/etc/wireguard"
 ```
 
-Run the tool, and follow the prompts
-```
-python generate-config.py
-```
-
-Copy the `.conf` file to `/etc/wireguard/`, and start the interface
-```
-sudo cp PIA-Iceland-1605054556.conf /etc/wireguard/wg0.conf
-sudo wg-quick up wg0
-```
-
-You can shut down the interface with `sudo wg-quick down wg0`
-
-## RouterOS
-
-If you want to send the Wireguard config to a Mikrotik router, use configure-ros.py:
-```
-$ ./configure-ros.py -i wg-pia-il -f PIA-Iceland-1605054556.conf
-- loading config from ./config.yaml
-- added new /interface/wireguard
-- added new /ip/address
-- added new /interface/wireguard/peers
-- added new /ip/dns/static
-```
-You'll then have an interface named wg-pia-il, and it's up to you to configure what traffic routes through it.  A static dns entry for the PIA gateway IP is added as 'gw-wg-pia-il' to help you identify it.
-
-If an interface of the supplied name already exists, its settings will be updated.  To remove interfaces, use the `-d` option:
-```
-$ ./configure-ros.py -i wg-pia-il -d
-- loading config from config.yaml
-- removed entry in /interface/wireguard/peers
-- removed entry in /ip/address
-- removed entry in /interface/wireguard
-- removed entry in /ip/dns/static
-```
-
-## Check everything is working
-Visit https://dnsleaktest.com/ to see your new IP and check for DNS leaks.
-
-## Options
-
-The following options are supported:
 
 ```
-$ ./generate-config.py -h
-usage: generate-config.py [-h] [-r] [--sort-latency] [-f CONFIG]
+Arguments:
+  --region "REGION"          **Allowed values are** AU Adelaide, AU Brisbane, AU
+                             Melbourne, AU Perth, AU Sydney, Albania, Algeria,
+                             Andorra, Argentina, Armenia, Australia Streaming
+                             Optimized, Austria, Bahamas, Bangladesh, Belgium,
+                             Bolivia, Bosnia and Herzegovina, Brazil, Bulgaria, CA
+                             Montreal, CA Ontario, CA Ontario Streaming Optimized,
+                             CA Toronto, CA Vancouver, Cambodia, Chile, China,
+                             Colombia, Costa Rica, Croatia, Cyprus, Czech Republic,
+                             DE Berlin, DE Frankfurt, DE Germany Streaming
+                             Optimized, DK Copenhagen, DK Streaming Optimized, ES
+                             Madrid, ES Valencia, Ecuador, Egypt, Estonia, FI
+                             Helsinki, FI Streaming Optimized, France, Georgia,
+                             Greece, Greenland, Guatemala, Hong Kong, Hungary, IT
+                             Milano, IT Streaming Optimized, Iceland, India,
+                             Indonesia, Ireland, Isle of Man, Israel, JP Streaming
+                             Optimized, JP Tokyo, Kazakhstan, Latvia,
+                             Liechtenstein, Lithuania, Luxembourg, Macao, Malaysia,
+                             Malta, Mexico, Moldova, Monaco, Mongolia, Montenegro,
+                             Morocco, NL Netherlands Streaming Optimized, Nepal,
+                             Netherlands, New Zealand, Nigeria, North Macedonia,
+                             Norway, Panama, Peru, Philippines, Poland, Portugal,
+                             Qatar, Romania, SE Stockholm, SE Streaming Optimized,
+                             Saudi Arabia, Serbia, Singapore, Slovakia, Slovenia,
+                             South Africa, South Korea, Sri Lanka, Switzerland,
+                             Taiwan, Turkey, UK London, UK Manchester, UK
+                             Southampton, UK Streaming Optimized, US Alabama, US
+                             Alaska, US Arkansas, US Atlanta, US Baltimore, US
+                             California, US Chicago, US Connecticut, US Denver, US
+                             East, US East Streaming Optimized, US Florida, US
+                             Honolulu, US Houston, US Idaho, US Indiana, US Iowa,
+                             US Kansas, US Kentucky, US Las Vegas, US Louisiana, US
+                             Maine, US Massachusetts, US Michigan, US Minnesota, US
+                             Mississippi, US Missouri, US Montana, US Nebraska, US
+                             New Hampshire, US New Mexico, US New York, US North
+                             Carolina, US North Dakota, US Ohio, US Oklahoma, US
+                             Oregon, US Pennsylvania, US Rhode Island, US Salt Lake
+                             City, US Seattle, US Silicon Valley, US South
+                             Carolina, US South Dakota, US Tennessee, US Texas, US
+                             Vermont, US Virginia, US Washington DC, US West, US
+                             West Streaming Optimized, US West Virginia, US
+                             Wilmington, US Wisconsin, US Wyoming, Ukraine, United
+                             Arab Emirates, Uruguay, Venezuela, Vietnam
 
-Generate PIA wireguard config
+  --username "USERNAME"      PIA account username
 
-optional arguments:
-  -h, --help            show this help message and exit
-  -r , --region         Allowed values are AU Adelaide, AU Brisbane, AU
-                        Melbourne, AU Perth, AU Sydney, Albania, Algeria,
-                        Andorra, Argentina, Armenia, Australia Streaming
-                        Optimized, Austria, Bahamas, Bangladesh, Belgium,
-                        Bolivia, Bosnia and Herzegovina, Brazil, Bulgaria, CA
-                        Montreal, CA Ontario, CA Ontario Streaming Optimized,
-                        CA Toronto, CA Vancouver, Cambodia, Chile, China,
-                        Colombia, Costa Rica, Croatia, Cyprus, Czech Republic,
-                        DE Berlin, DE Frankfurt, DE Germany Streaming
-                        Optimized, DK Copenhagen, DK Streaming Optimized, ES
-                        Madrid, ES Valencia, Ecuador, Egypt, Estonia, FI
-                        Helsinki, FI Streaming Optimized, France, Georgia,
-                        Greece, Greenland, Guatemala, Hong Kong, Hungary, IT
-                        Milano, IT Streaming Optimized, Iceland, India,
-                        Indonesia, Ireland, Isle of Man, Israel, JP Streaming
-                        Optimized, JP Tokyo, Kazakhstan, Latvia,
-                        Liechtenstein, Lithuania, Luxembourg, Macao, Malaysia,
-                        Malta, Mexico, Moldova, Monaco, Mongolia, Montenegro,
-                        Morocco, NL Netherlands Streaming Optimized, Nepal,
-                        Netherlands, New Zealand, Nigeria, North Macedonia,
-                        Norway, Panama, Peru, Philippines, Poland, Portugal,
-                        Qatar, Romania, SE Stockholm, SE Streaming Optimized,
-                        Saudi Arabia, Serbia, Singapore, Slovakia, Slovenia,
-                        South Africa, South Korea, Sri Lanka, Switzerland,
-                        Taiwan, Turkey, UK London, UK Manchester, UK
-                        Southampton, UK Streaming Optimized, US Alabama, US
-                        Alaska, US Arkansas, US Atlanta, US Baltimore, US
-                        California, US Chicago, US Connecticut, US Denver, US
-                        East, US East Streaming Optimized, US Florida, US
-                        Honolulu, US Houston, US Idaho, US Indiana, US Iowa,
-                        US Kansas, US Kentucky, US Las Vegas, US Louisiana, US
-                        Maine, US Massachusetts, US Michigan, US Minnesota, US
-                        Mississippi, US Missouri, US Montana, US Nebraska, US
-                        New Hampshire, US New Mexico, US New York, US North
-                        Carolina, US North Dakota, US Ohio, US Oklahoma, US
-                        Oregon, US Pennsylvania, US Rhode Island, US Salt Lake
-                        City, US Seattle, US Silicon Valley, US South
-                        Carolina, US South Dakota, US Tennessee, US Texas, US
-                        Vermont, US Virginia, US Washington DC, US West, US
-                        West Streaming Optimized, US West Virginia, US
-                        Wilmington, US Wisconsin, US Wyoming, Ukraine, United
-                        Arab Emirates, Uruguay, Venezuela, Vietnam
-  --sort-latency        Display lowest latency regions first (requires root)
-  -f CONFIG, --config CONFIG
-                        Name of the generated config file
+  --password "PASSWORD"      PIA account password
 
-$ ./configure-ros.py -h
-usage: configure-ros.py [-h] [-d] -i INTERFACE -f CONFIG
+  --config "CONFIGNAME"      Name of the generated config files. Make sure no other config exists with this name. E.G wg0, wg1, wg2
 
-Configure RouterOS with wireguard config
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -d, --delete
-  -i INTERFACE, --interface INTERFACE
-  -f CONFIG, --config CONFIG
+  --config-dir "DIRECTORY"   Directory where config files will be generated. Default is /etc/wireguard
 ```
-
-## Config file
-
-You can store your username, password, and region in a `config.yaml` file in the same directory as the script:
+## Example
 ```
-pia:
-    username: pXXXXXXX
-    password: 1234567890abcde
-    region: "AU Melbourne"
-router:
-    ip: 192.168.0.1
-    username: admin
-    password: password
+python generate-config.py --region "Norway" --username "a123456" --password "astrongpassword" --config "wg0" --config-dir "/etc/wireguard"
 ```

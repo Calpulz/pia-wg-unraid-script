@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from piawg import piawg
-from getpass import getpass
 from datetime import datetime
 from wgconfig import WGConfig
 import argparse, os, sys
@@ -19,6 +18,7 @@ def main():
     parser.add_argument('-f', '--config', help='Name of the generated config file')
     parser.add_argument('--username', required=True, help='PIA username')
     parser.add_argument('--password', required=True, help='PIA password')
+    parser.add_argument('--config-dir', default='.', help='Directory to save the generated config file (default: current directory)')
     args = parser.parse_args()
 
     # Select region
@@ -55,12 +55,17 @@ def main():
         timestamp = int(datetime.now().timestamp())
         location = pia.region.replace(' ', '-')
         config_file = 'PIA-{}-{}.conf'.format(location, timestamp)
-    print("Saving configuration file {}".format(config_file))
-    if config_file[0] != '/':
-        config_file = os.path.join(os.path.dirname(__file__), config_file)
-        config_file = os.path.normpath(config_file)
 
-    wgc = WGConfig(config_file)
+    # Ensure the config directory exists
+    config_dir = os.path.abspath(args.config_dir)
+    if not os.path.exists(config_dir):
+        os.makedirs(config_dir)
+
+    # Combine the config directory and config file name
+    config_path = os.path.join(config_dir, config_file)
+    print("Saving configuration file to {}".format(config_path))
+
+    wgc = WGConfig(config_path)
     wgc.add_attr(None, 'Address', pia.connection['peer_ip'])
     wgc.add_attr(None, 'PrivateKey', pia.privatekey)
     for dns_server in pia.connection['dns_servers'][0:2]:

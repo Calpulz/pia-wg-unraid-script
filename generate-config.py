@@ -78,16 +78,16 @@ def main():
     network = pia.connection['peer_ip'].rsplit('.', 1)[0] + ".0/24"  # Adjust the network to match "10.26.147.0/24"
 
     cfg_content = f"""
-    PublicKey:0=""
-    PROT:0=""
-    Network:0="{network}"
-    Endpoint:0=""
-    UPNP:0="no"
-    DROP:0=""
-    RULE:0=""
-    TYPE:1="8"
-    Address:1=""
-    """
+PublicKey:0="{pia.connection['server_key']}"
+PROT:0=""
+Network:0="{network}"
+Endpoint:0=""
+UPNP:0="no"
+DROP:0=""
+RULE:0=""
+TYPE:1="8"
+Address:1=""
+"""
 
     # Save the .cfg file
     with open(cfg_file_path, 'w') as cfg_file:

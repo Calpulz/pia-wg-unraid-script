@@ -79,7 +79,22 @@ def main():
     wgc.add_attr(peer, 'Endpoint', pia.connection['server_ip'] + ':1337')
     wgc.add_attr(peer, 'AllowedIPs', '0.0.0.0/0')
     wgc.add_attr(peer, 'PersistentKeepalive', '25')
-    wgc.write_file()
+
+    # Add the comments under [Interface] and [Peer]
+    with open(config_path, 'w') as config_file:
+        config_file.write("[Interface]\n")
+        config_file.write("#\n")
+        config_file.write(f"PrivateKey = {pia.privatekey}\n")
+        config_file.write(f"Address = {pia.connection['peer_ip']}\n")
+        config_file.write(f"DNS = {', '.join(pia.connection['dns_servers'][0:2])}\n\n")
+        config_file.write("[Peer]\n")
+        config_file.write("#\n")
+        config_file.write(f"PublicKey = {pia.connection['server_key']}\n")
+        config_file.write(f"Endpoint = {pia.connection['server_ip']}:1337\n")
+        config_file.write("AllowedIPs = 0.0.0.0/0\n")
+        config_file.write("PersistentKeepalive = 25\n")
+
+    print(f"Configuration saved to {config_path}")
 
     # Generate the public key for the .cfg file from the private key
     public_key_cfg = generate_public_key(pia.privatekey)
@@ -108,4 +123,3 @@ Address:1=""
 
 if __name__ == '__main__':
     main()
-

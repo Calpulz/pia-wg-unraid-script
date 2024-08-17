@@ -67,7 +67,6 @@ def main():
 
     # Combine the config directory and config file name
     config_path = os.path.join(config_dir, config_file)
-    print("Saving configuration file to {}".format(config_path))
 
     wgc = WGConfig(config_path)
     wgc.add_attr(None, 'Address', pia.connection['peer_ip'])
@@ -94,7 +93,7 @@ def main():
         config_file.write("AllowedIPs = 0.0.0.0/0\n")
         config_file.write("PersistentKeepalive = 25\n")
 
-    print(f"Configuration saved to {config_path}")
+    print(f"Wireguard configuration saved to {config_path}")
 
     # Generate the public key for the .cfg file from the private key
     public_key_cfg = generate_public_key(pia.privatekey)
@@ -119,7 +118,7 @@ Address:1=""
     with open(cfg_file_path, 'w') as cfg_file:
         cfg_file.write(cfg_content.strip())
 
-    print(f"Configuration saved to {cfg_file_path}")
+    print(f"Unraid configuration saved to {cfg_file_path}")
 
 if __name__ == '__main__':
     main()

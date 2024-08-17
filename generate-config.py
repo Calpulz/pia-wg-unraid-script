@@ -77,5 +77,27 @@ def main():
     wgc.add_attr(peer, 'PersistentKeepalive', '25')
     wgc.write_file()
 
+    # Generate the wg1.cfg file
+    cfg_file_path = os.path.join(config_dir, "wg1.cfg")
+    network = pia.connection['peer_ip'].rsplit('.', 1)[0] + ".0/24"  # Adjust the network to match "10.26.147.0/24"
+
+    cfg_content = f"""
+    PublicKey:0=""
+    PROT:0=""
+    Network:0="{network}"
+    Endpoint:0=""
+    UPNP:0="no"
+    DROP:0=""
+    RULE:0=""
+    TYPE:1="8"
+    Address:1=""
+    """
+
+    # Save the cfg file
+    with open(cfg_file_path, 'w') as cfg_file:
+        cfg_file.write(cfg_content.strip())
+
+    print(f"Configuration saved to {cfg_file_path}")
+
 if __name__ == '__main__':
     main()

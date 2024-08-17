@@ -4,7 +4,7 @@ from piawg import piawg
 from getpass import getpass
 from datetime import datetime
 from wgconfig import WGConfig
-import argparse, os, sys, yaml
+import argparse, os, sys
 
 # comment to debug
 sys.tracebacklimit = 0
@@ -15,40 +15,23 @@ def main():
 
     # Parse arguments
     parser = argparse.ArgumentParser(description='Generate PIA wireguard config')
-    parser.add_argument('-r', '--region', dest='region', choices=regions, help='Select a region', metavar='')
+    parser.add_argument('-r', '--region', dest='region', choices=regions, required=True, help='Select a region', metavar='')
     parser.add_argument('-f', '--config', help='Name of the generated config file')
-    parser.add_argument('--username', help='PIA username')
-    parser.add_argument('--password', help='PIA password')
+    parser.add_argument('--username', required=True, help='PIA username')
+    parser.add_argument('--password', required=True, help='PIA password')
     args = parser.parse_args()
 
-    # Load config from config.yaml if it exists
-    config = None
-    file = os.path.join(os.path.dirname(__file__), 'config.yaml')
-    file = os.path.normpath(file)
-    if os.path.exists(file):
-        print("Loading config from {}".format(file))
-        with open(file, 'r') as f:
-            config = yaml.safe_load(f)
-
-    # Select region from argument or config.yaml
-    region = args.region or (config['pia']['region'] if config else None)
-    if not region:
-        print("Error: No region specified. Please provide a region with --region or in config.yaml.")
-        sys.exit(1)
-
+    # Select region
+    region = args.region
     print("Selected region: '{}'".format(region))
     pia.set_region(region)
 
     # Generate public and private key pair
     pia.generate_keys()
 
-    # Get credentials from arguments or config.yaml
-    username = args.username or (config['pia']['username'] if config else None)
-    password = args.password or (config['pia']['password'] if config else None)
-
-    if None in (username, password):
-        print("Error: Username or password not provided. Please provide them via arguments or config.yaml.")
-        sys.exit(1)
+    # Get credentials from arguments
+    username = args.username
+    password = args.password
 
     # Get token
     if not pia.get_token(username, password):
